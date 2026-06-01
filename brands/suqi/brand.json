@@ -18,17 +18,31 @@
     "tone_variants": []
   },
   "ai_style": {
-    "preferred_styles": ["minimal", "notion", "fresh"],
+    "preferred_styles": [
+      "minimal",
+      "notion",
+      "fresh"
+    ],
     "color_constraints": "Professional blue (#2563EB) and gold (#D69E2E) accents. Clean, corporate, not flashy.",
-    "negative": ["dark", "cyber", "grunge", "aggressive", "cute"]
+    "negative": [
+      "dark",
+      "cyber",
+      "grunge",
+      "aggressive",
+      "cute"
+    ]
   },
   "text_render": {
-    "page_size": [1080, 1440],
+    "page_size": [
+      1080,
+      1440
+    ],
     "body_font_size": "38px",
     "dropcap": false,
     "golden_sentence": false,
     "background_texture": null,
-    "mold_default": "infograph"
+    "mold_default": "infograph",
+    "theme": "klein-serif"
   },
   "watermark": {
     "enabled": true,

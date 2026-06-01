@@ -15,20 +15,40 @@
       "body": "Noto Serif SC",
       "mono": "SF Mono"
     },
-    "tone_variants": ["strategic", "tech", "philosophical", "literary"]
+    "tone_variants": [
+      "strategic",
+      "tech",
+      "philosophical",
+      "literary"
+    ]
   },
   "ai_style": {
-    "preferred_styles": ["tuisheng", "screen-print", "chalkboard"],
+    "preferred_styles": [
+      "tuisheng",
+      "screen-print",
+      "chalkboard"
+    ],
     "color_constraints": "Dark backgrounds only. Amber/gold (#D4A520) and teal (#40B8B8) accents. Never bright, pastel, or cute.",
-    "negative": ["cute", "kawaii", "pastel", "bright", "pink", "neon"]
+    "negative": [
+      "cute",
+      "kawaii",
+      "pastel",
+      "bright",
+      "pink",
+      "neon"
+    ]
   },
   "text_render": {
-    "page_size": [1080, 1440],
+    "page_size": [
+      1080,
+      1440
+    ],
     "body_font_size": "38px",
     "dropcap": true,
     "golden_sentence": true,
     "background_texture": "../../asyre-xhs/backgrounds/circuit-gold-seamless.png",
-    "mold_default": "multi-card"
+    "mold_default": "multi-card",
+    "theme": "mojin"
   },
   "watermark": {
     "enabled": true,

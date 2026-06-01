@@ -15,20 +15,38 @@
       "body": "Noto Serif SC",
       "mono": "SF Mono"
     },
-    "tone_variants": ["speculative", "tech", "literary", "scientific", "default"]
+    "tone_variants": [
+      "speculative",
+      "tech",
+      "literary",
+      "scientific",
+      "default"
+    ]
   },
   "ai_style": {
-    "preferred_styles": ["warm", "minimal", "notion"],
+    "preferred_styles": [
+      "warm",
+      "minimal",
+      "notion"
+    ],
     "color_constraints": "Warm tones, earth colors. Can be light or dark background depending on mood.",
-    "negative": ["neon", "cyber", "aggressive"]
+    "negative": [
+      "neon",
+      "cyber",
+      "aggressive"
+    ]
   },
   "text_render": {
-    "page_size": [1080, 1440],
+    "page_size": [
+      1080,
+      1440
+    ],
     "body_font_size": "38px",
     "dropcap": true,
     "golden_sentence": true,
     "background_texture": null,
-    "mold_default": "multi-card"
+    "mold_default": "multi-card",
+    "theme": "nuanhe"
   },
   "watermark": {
     "enabled": true,

@@ -1,0 +1,107 @@
+# EXTEND.md — Preferences Schema
+
+> User/project-level configuration for astra-social defaults.
+
+## File Format
+
+YAML inside a markdown file named `EXTEND.md`.
+
+```yaml
+version: 1
+brand: tuisheng          # Default brand slug to use
+watermark:
+  enabled: true
+  content: "@username"
+  position: bottom-right  # bottom-right | bottom-left | bottom-center
+preferred_mode: auto      # auto | ai | text | hybrid
+preferred_style: null     # null = auto-detect from content; or style slug
+preferred_layout: null    # null = auto-detect from content; or layout slug
+language: auto            # zh | en | ja | ko | auto
+humanize: true            # Run humanizer step (去AI味)
+fact_check: true          # Run fact-check step
+```
+
+---
+
+## Field Reference
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `version` | int | `1` | Schema version for forward compatibility |
+| `brand` | string | `null` | Brand slug. Overridden by `--brand` flag. |
+| `watermark.enabled` | bool | `true` | Show watermark on output images |
+| `watermark.content` | string | `""` | Watermark text (e.g., "@handle") |
+| `watermark.position` | enum | `bottom-right` | Watermark placement |
+| `preferred_mode` | enum | `auto` | Default mode. `auto` = content-signal routing. |
+| `preferred_style` | string/null | `null` | AI generation style. `null` = auto-detect. |
+| `preferred_layout` | string/null | `null` | AI generation layout. `null` = auto-detect. |
+| `language` | enum | `auto` | Content language. `auto` = detect from text. |
+| `humanize` | bool | `true` | Whether to run humanizer on content. |
+| `fact_check` | bool | `true` | Whether to run fact-check on content. |
+
+---
+
+## Lookup Priority
+
+Checked in order; first found wins:
+
+```
+1. {project_dir}/.baoyu-skills/astra-social/EXTEND.md    (project-level)
+2. $XDG_CONFIG_HOME/astra-social/EXTEND.md                (XDG config)
+3. ~/.baoyu-skills/astra-social/EXTEND.md                  (user-level)
+```
+
+If none found → all defaults apply (auto mode, no brand, humanize on, fact-check on).
+
+### XDG_CONFIG_HOME
+
+- macOS: `~/Library/Application Support/astra-social/EXTEND.md`
+- Linux: `~/.config/astra-social/EXTEND.md`
+- If `$XDG_CONFIG_HOME` is set explicitly, use that path.
+
+---
+
+## Override Hierarchy
+
+Command-line flags always win over EXTEND.md values:
+
+```
+CLI flags  >  EXTEND.md  >  Defaults
+```
+
+Examples:
+- EXTEND.md says `brand: tuisheng`, but `--brand=qihe` → uses qihe
+- EXTEND.md says `preferred_mode: text`, but `--mode=ai` → uses ai
+- EXTEND.md says `humanize: false`, content analysis suggests humanization → skip (EXTEND.md honored)
+
+---
+
+## Minimal Example
+
+```yaml
+version: 1
+brand: asher
+```
+
+Everything else falls back to defaults.
+
+## Full Example
+
+```yaml
+version: 1
+brand: tuisheng
+watermark:
+  enabled: true
+  content: "@tuisheng_official"
+  position: bottom-right
+preferred_mode: auto
+preferred_style: null
+preferred_layout: null
+language: zh
+humanize: true
+fact_check: true
+```
+
+---
+
+*Reference for: SKILL.md Section 4 Step 0 — Load Preferences*

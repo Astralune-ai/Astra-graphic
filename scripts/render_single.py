@@ -1,249 +1,123 @@
 #!/usr/bin/env python3
 """
-Asyre XHS — Single-page renderer.
-Renders entire Markdown article as ONE image (1080px width, adaptive height).
-Top: avatar + author + date + tags
-Bottom: watermark
-Content: auto-fits vertically, no pagination.
+astra-graphic — Mode B single-page renderer (editorial engine v8).
+
+Renders an entire Markdown article as ONE tall image (1080px wide, adaptive
+height) using the same editorial engine as render_pages.py: hairline rules,
+mono kicker section headers, 20 data/structure blocks, tables, 14 themes.
+
+Used for the long / infograph / visual-note molds where pagination is not wanted.
 
 Usage:
-  python3 render_single.py \
-    --input article.md \
-    --output ./output/ \
-    --background bg.png \
-    --avatar avatar.jpg \
-    --author "Asher 修荷" \
-    --date "2026-03-19" \
-    --tags "标签1 × 标签2" \
-    --watermark "修荷 · 蜕升学院"
+  python3 render_single.py --input article.md --output ./out/ --theme mono \
+    [--avatar a.jpg --author "Astra Lune" --date 2026-06 --tags "A × B" \
+     --watermark "Astra Lune" --background texture.png --no-author --no-signature]
 """
 
 import argparse
-import base64
-import os
-import re
+import sys
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-# Import parse_markdown from render_pages.py (reuse parsing logic)
-import sys
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
-from render_pages import parse_markdown
+from render_pages import (  # reuse the single source of truth
+    parse_markdown, block_to_html, full_css, img_to_base64,
+    THEMES, MONO_URL, PAGE_W, PAD_X, DEFAULT_THEME, DEFAULT_SIGNATURE,
+)
 
-# ── Constants ──────────────────────────────────────────────────────
-PAGE_W = 1080
-PAD_X = 65
-PAD_TOP = 50
-PAD_BOT = 70
+PAD_TOP = 72
+PAD_BOT = 84
 
-SKILL_DIR = Path(__file__).resolve().parent.parent
-TEMPLATES_DIR = SKILL_DIR / "templates"
-
-
-# ── Inline markup ──────────────────────────────────────────────────
-
-def inline_markup(text: str) -> str:
-    """Convert **bold** to gold, ^^text^^ to teal."""
-    text = re.sub(r'\*\*(.+?)\*\*', r'<span style="color:#D4A520">\1</span>', text)
-    text = re.sub(r'\^\^(.+?)\^\^', r'<span style="color:#40B8B8">\1</span>', text)
-    return text
-
-
-# ── Image base64 ──────────────────────────────────────────────────
-
-def img_to_base64(path: str) -> str:
-    if not path or not os.path.exists(path):
-        return ''
-    ext = Path(path).suffix.lower().lstrip('.')
-    mime = {'jpg': 'jpeg', 'jpeg': 'jpeg', 'png': 'png', 'gif': 'gif', 'webp': 'webp'}.get(ext, 'png')
-    with open(path, 'rb') as f:
-        b64 = base64.b64encode(f.read()).decode()
-    return f'data:image/{mime};base64,{b64}'
-
-
-# ── Block → HTML ──────────────────────────────────────────────────
-
-def block_to_html(block: dict) -> str:
-    t = block['type']
-    if t == 'title':
-        return f'<h1>{inline_markup(block["text"])}</h1>'
-    elif t == 'subtitle':
-        return f'<h2>{inline_markup(block["text"])}</h2>'
-    elif t == 'section':
-        return f'<h3>{inline_markup(block["text"])}</h3>'
-    elif t == 'para':
-        lines = block['text'].split('\n')
-        text = '<br>'.join(inline_markup(l) for l in lines)
-        return f'<p>{text}</p>'
-    elif t == 'callout':
-        return f'<blockquote class="callout-red">{inline_markup(block["text"])}</blockquote>'
-    elif t == 'callout-gold':
-        return f'<blockquote class="callout-gold">{inline_markup(block["text"])}</blockquote>'
-    elif t == 'divider':
-        return '<hr>'
-    elif t == 'image':
-        b64 = img_to_base64(block['path'])
-        if b64:
-            return f'<div class="article-image"><img src="{b64}"></div>'
-        return ''
-    return ''
-
-
-# ── Main ──────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description='Asyre XHS single-page renderer')
-    parser.add_argument('--input', '-i', required=True, help='Markdown file')
-    parser.add_argument('--output', '-o', required=True, help='Output directory')
-    parser.add_argument('--background', '-bg', help='Background image path')
-    parser.add_argument('--avatar', help='Author avatar path')
-    parser.add_argument('--author', default='Asher 修荷', help='Author name')
-    parser.add_argument('--date', default='', help='Date string')
-    parser.add_argument('--tags', default='', help='Tags (× separated)')
-    parser.add_argument('--watermark', default='修荷 · 蜕升学院', help='Watermark text')
-    args = parser.parse_args()
+    ap = argparse.ArgumentParser(description='astra-graphic Mode B single-page renderer')
+    ap.add_argument('--input', '-i', required=True)
+    ap.add_argument('--output', '-o', required=True)
+    ap.add_argument('--theme', '-t', default=DEFAULT_THEME, help=f'one of: {", ".join(THEMES)}')
+    ap.add_argument('--background', '-bg', default='')
+    ap.add_argument('--avatar', default='')
+    ap.add_argument('--author', default=DEFAULT_SIGNATURE)
+    ap.add_argument('--date', default='')
+    ap.add_argument('--tags', default='')
+    ap.add_argument('--watermark', default=DEFAULT_SIGNATURE)
+    ap.add_argument('--no-author', action='store_true')
+    ap.add_argument('--no-signature', action='store_true')
+    ap.add_argument('--name', default='single', help='output filename stem')
+    args = ap.parse_args()
 
-    md_text = Path(args.input).read_text()
-    blocks = parse_markdown(md_text)
+    if args.theme not in THEMES:
+        print(f"⚠️  unknown theme '{args.theme}', falling back to {DEFAULT_THEME}")
+        args.theme = DEFAULT_THEME
 
+    css, fonts, colors = full_css(args.theme)
+    blocks = parse_markdown(Path(args.input).read_text())
     out_dir = Path(args.output)
     out_dir.mkdir(parents=True, exist_ok=True)
+    print(f"🎨 theme: {args.theme} ({THEMES[args.theme][0]})  → single image")
 
-    bg_b64 = img_to_base64(args.background)
-    avatar_b64 = img_to_base64(args.avatar)
+    bg_url = img_to_base64(args.background) if args.background else ''
 
-    # Build author header
+    # author header (reuse base_css .author-header classes)
     author_html = ''
-    if avatar_b64:
-        tags_html = f'<div class="tags">{args.tags}</div>' if args.tags else ''
-        date_html = f'<div class="author-date">{args.date}</div>' if args.date else ''
-        author_html = (f'<div class="author-header">'
-                       f'<img src="{avatar_b64}">'
-                       f'<div>'
-                       f'<div class="author-name">{args.author}</div>'
-                       f'{date_html}{tags_html}'
-                       f'</div></div>')
+    if args.avatar and not args.no_author:
+        av = img_to_base64(args.avatar)
+        if av:
+            tags = f'<div class="tags">{args.tags}</div>' if args.tags else ''
+            date = f'<div class="meta">{args.date}</div>' if args.date else ''
+            author_html = (f'<div class="author-header"><img src="{av}">'
+                           f'<div><div class="name">{args.author}</div>{date}{tags}</div></div>')
 
-    # Build content blocks
-    content_parts = []
-    for block in blocks:
-        if block['type'] == 'divider':
-            continue  # skip dividers in single-page mode
-        content_parts.append(block_to_html(block))
-    content_html = '\n'.join(content_parts)
+    # content (dropcap on first para)
+    parts = []
+    if author_html:
+        parts.append(author_html)
+    first_para = False
+    for b in blocks:
+        if b['type'] == 'divider':
+            parts.append('<div class="hr"></div>')
+            continue
+        dc = (not first_para and b['type'] == 'para')
+        if dc:
+            first_para = True
+        parts.append(block_to_html(b, dropcap=dc))
+    if not args.no_signature:
+        parts.append(f'<div class="signature">— {args.author}</div>')
+    content_html = '\n'.join(parts)
 
-    # Build watermark
-    watermark_html = f'<div class="watermark">{args.watermark}</div>'
+    texture = (f'<div style="position:fixed;inset:0;background-image:url(\'{bg_url}\');'
+               f'background-size:100% auto;background-repeat:repeat-y;opacity:.10;z-index:0"></div>'
+               if bg_url else '')
+    wm = (f'<div style="text-align:right;font-family:var(--mono);font-size:16px;'
+          f'color:{colors["dim"]};opacity:.65;letter-spacing:2px;margin-top:30px;">{args.watermark}</div>')
 
-    # Full HTML
-    html = f'''<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap');
-* {{ margin:0; padding:0; box-sizing:border-box; }}
-body {{
-  width: {PAGE_W}px;
-  margin: 0 auto;
-  font-family: 'Noto Serif SC', serif;
-  color: #E8E0D0;
-  background: #0D0D0F;
-  position: relative;
-}}
-.bg {{
-  position: fixed; top:0; left:0; right:0; bottom:0;
-  background-image: url('{bg_b64}');
-  background-size: 100% auto;
-  background-repeat: repeat-y;
-  opacity: 0.45; z-index: 0;
-}}
-.content {{
-  position: relative; z-index: 10;
-  padding: {PAD_TOP}px {PAD_X}px {PAD_BOT}px {PAD_X}px;
-}}
-.author-header {{
-  display: flex; align-items: center; gap: 20px;
-  margin-bottom: 32px; padding-bottom: 24px;
-  border-bottom: 2px solid rgba(212,165,32,0.3);
-}}
-.author-header img {{
-  width: 90px; height: 90px; border-radius: 50%;
-  border: 3px solid rgba(212,165,32,0.6);
-  object-fit: cover;
-}}
-.author-name {{ font-size: 26px; font-weight: 700; color: #D4A520; }}
-.author-date {{ font-size: 16px; color: rgba(232,224,208,0.4); margin-top: 3px; }}
-.tags {{ font-size: 14px; color: rgba(64,184,184,0.6); margin-top: 3px; }}
+    html = (f'<!DOCTYPE html><html><head><meta charset="utf-8">'
+            f'<link rel="stylesheet" href="{fonts}"><link rel="stylesheet" href="{MONO_URL}">'
+            f'<style>{css}'
+            f' html,body{{width:{PAGE_W}px;-webkit-font-smoothing:antialiased;}}'
+            f' .content{{position:relative;z-index:10;padding:{PAD_TOP}px {PAD_X}px {PAD_BOT}px;}}'
+            f'</style></head><body>{texture}'
+            f'<div class="content">{content_html}{wm}</div></body></html>')
 
-h1 {{ font-size: 28px; color: #D4A520; margin-bottom: 6px; line-height: 1.4; }}
-h2 {{ font-size: 19px; color: #40B8B8; font-style: italic; margin-bottom: 22px; font-weight: 400; }}
-h3 {{ font-size: 24px; color: #D4A520; margin-top: 20px; margin-bottom: 12px; font-weight: 700; }}
-p {{ font-size: 22px; line-height: 1.9; margin-bottom: 14px; }}
-hr {{ border: none; border-top: 1px solid rgba(212,165,32,0.25); margin: 18px 0; }}
-blockquote {{
-  padding: 14px 18px;
-  margin: 16px 0;
-  border-radius: 0 8px 8px 0;
-  font-style: italic;
-  font-size: 22px;
-  line-height: 1.9;
-}}
-blockquote.callout-red {{
-  border-left: 4px solid #C0392B;
-  background: rgba(192,57,43,0.08);
-}}
-blockquote.callout-gold {{
-  border-left: 4px solid #D4A520;
-  background: rgba(212,165,32,0.08);
-}}
-blockquote p {{ margin-bottom: 0; }}
-.article-image {{
-  text-align: center;
-  margin: 20px 0;
-}}
-.article-image img {{
-  max-width: 100%;
-  max-height: 800px;
-  object-fit: contain;
-  border-radius: 8px;
-}}
-.watermark {{
-  text-align: right; font-size: 14px;
-  color: rgba(212,165,32,0.15); letter-spacing: 6px;
-  margin-top: 24px;
-}}
-</style></head>
-<body>
-<div class="bg"></div>
-<div class="content">
-{author_html}
-{content_html}
-{watermark_html}
-</div>
-</body></html>'''
-
-    out_path = out_dir / 'single.png'
-
+    out_path = out_dir / f'{args.name}.png'
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
-        page = browser.new_page(viewport={'width': PAGE_W, 'height': 1440})
-        page.set_content(html)
-        page.wait_for_load_state('networkidle')
-
-        # Measure content height
-        content_h = page.evaluate('document.querySelector(".content").scrollHeight + 120')
-        final_h = max(content_h, 800)
-
-        # Set viewport to final height
+        page = browser.new_page(viewport={'width': PAGE_W, 'height': 1440}, device_scale_factor=2)
+        page.set_content(html, timeout=120000)
+        try:
+            page.evaluate("document.fonts.ready")
+        except Exception:
+            pass
+        page.wait_for_timeout(700)
+        content_h = int(page.evaluate('document.querySelector(".content").getBoundingClientRect().height'))
+        final_h = max(content_h, 600)
         page.set_viewport_size({'width': PAGE_W, 'height': final_h})
-
-        # Screenshot
+        page.wait_for_timeout(200)
         page.screenshot(path=str(out_path), clip={'x': 0, 'y': 0, 'width': PAGE_W, 'height': final_h})
         browser.close()
 
-    print(f'✅ {out_path} ({final_h}px height)')
-    print(f'\nDone! Single-page image → {out_path}')
+    print(f'✅ {out_path} ({final_h}px tall)\nDone! Single-page image → {out_path}')
 
 
 if __name__ == '__main__':

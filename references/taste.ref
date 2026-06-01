@@ -1,0 +1,164 @@
+# Anti-AI-Slop Quality Gates
+
+> Merged from content-card/taste.md + astra-xhs/taste-xhs.md. Universal rules for all output modes.
+
+## 1. Color Rules
+
+### 90/8/2 Rule
+
+| Layer | Percentage | Role | Example |
+|-------|-----------|------|---------|
+| Neutral base | 90% | Background, body text, containers | `#0D0D0F`, `#FAFAF8`, `#1A1A2E` |
+| Structure color | 8% | Borders, dividers, secondary text, subtle accents | `#2D2D30`, `#E5E5E0` |
+| Accent color | 2% | Highlights, CTAs, golden sentences, key data | `#D4A520`, `#40B8B8` |
+
+### Base Colors
+
+- **Dark brands**: Use deep gray `#0D0D0F` — never pure black `#000000`. Pure black is harsh, lacks depth.
+- **Light brands**: Use warm off-white `#FAFAF8` — never pure white `#FFFFFF`. Pure white glares on mobile.
+- **Body text on dark**: `#E8E8E8` or `#D1D1D1`, not `#FFFFFF` (too high contrast causes eye strain).
+- **Body text on light**: `#333333` or `#4A4A4A`, not `#000000`.
+
+### Hard Limits
+
+- Max **2 accent colors** per piece (accent + secondary)
+- Saturation < 80% for all accents
+- No neon combos: pink + cyan + purple + yellow together = instant AI flag
+- No gradient text on headings — gradient fill is 2018 aesthetic
+- Shadows must be tinted (match background hue), never default gray
+- One piece = one temperature. No mixing warm gray and cool gray.
+
+---
+
+## 2. Typography Rules
+
+### Size Hierarchy
+
+| Element | Min Size | Notes |
+|---------|----------|-------|
+| Body text | **38px** | Non-negotiable. Mobile scaling: 1080px → 390px = ~2.8x. 38px → ~14px on phone. |
+| Golden sentence | 44px | Bold, with accent border |
+| Section heading | 56px | |
+| Subtitle | 44px | |
+| Title | 80px | |
+| Dropcap | 128px | First page, first paragraph only |
+
+### Ratio & Spacing
+
+- Max:Min font size ratio ≥ **10:1** (title 80px : footnote 8px creates clear hierarchy)
+- Line-height ≥ **1.6** for body text
+- Max line width: `65ch` for readability
+- Heading tracking: tight (`letter-spacing: -0.02em`)
+- Heading line-height: minimal (`1.1`)
+
+### Font Selection
+
+- **Banned**: Inter (AI default #1)
+- **Serif (Chinese)**: Noto Serif SC, LXGW WenKai
+- **Sans-serif (Chinese)**: Noto Sans CJK SC
+- **Sans-serif (Latin)**: Geist, Outfit, Cabinet Grotesk, Satoshi
+- **Monospace (data)**: JetBrains Mono, Fira Code — use for numbers when VISUAL_DENSITY > 7
+- Dashboard/tech contexts: sans-serif only, no serif
+
+---
+
+## 3. Content — Forbidden Phrases
+
+### Chinese AI Clichés
+
+```
+❌ "在当今..."          ❌ "让我们一起..."
+❌ "值得注意的是..."     ❌ "不可否认..."
+❌ "毫无疑问..."        ❌ "众所周知..."
+❌ "总而言之..."        ❌ "综上所述..."
+❌ "首先...其次...最后..."
+```
+
+### English AI-Speak
+
+```
+❌ "empower"    ❌ "seamless"    ❌ "leverage"
+❌ "delve"      ❌ "tapestry"    ❌ "landscape"
+❌ "next-gen"   ❌ "unlock"      ❌ "unleash"
+```
+
+### Structural Clichés
+
+- No **3+ parallel sentences** (排比三句以上 = AI pattern)
+- No **2+ layers of progressive structure** (递进两层以上暴露模板感)
+- No "First... Second... Finally..." enumeration in prose
+
+### Fake Data
+
+- No `99.99%`, `50%`, `1234567` — use organic "dirty" numbers: `47.2%`, `1,847`
+- No generic names: John Doe, Sarah Chan, Jane Smith
+- No startup clichés: Acme, Nexus, SmartFlow — invent names with taste
+- No Unsplash URLs — use `https://picsum.photos/seed/{random}/800/600` or SVG
+
+---
+
+## 4. Visual Layout Rules
+
+### DESIGN_VARIANCE Scale (target 5–9)
+
+| Value | Meaning | When |
+|-------|---------|------|
+| 1–4 | Too symmetric, templated | Avoid |
+| 5–6 | Structured with subtle asymmetry | Long-form reading |
+| 7–8 | Dynamic, editorial feel | Default target |
+| 9 | Art-directed, intentional chaos | Posters, covers |
+| 10 | Chaotic, hard to read | Avoid |
+
+### When DESIGN_VARIANCE > 4
+
+- **No centered Hero section** — use left-aligned, split-screen, or asymmetric whitespace
+- **No three-column equal-width cards** — AI signature layout. Use 2-col stagger, asymmetric grid, or masonry
+- Use CSS Grid fractional units: `grid-template-columns: 2fr 1fr 1fr`
+
+### Visual Rhythm
+
+**Every page needs at least one visual highlight:**
+
+| Highlight Type | Purpose |
+|---------------|---------|
+| Golden sentence (highlight block) | Make reader pause and think |
+| Image | Break text walls, add breathing room |
+| Callout / callout-gold | Emphasize key information |
+| Section heading | Structure, wayfinding |
+
+A pure-text page (3+ paragraphs with no highlight) causes reader fatigue on mobile.
+
+### Surface & Material
+
+- Card shadows: tinted to match background, never default gray
+- Glass effects: requires `backdrop-blur` + 1px inner border + subtle inset shadow
+- Large container radius: `border-radius: 2.5rem`
+- No default `box-shadow` glow — use inner borders or tinted shadows
+
+---
+
+## 5. Pre-Delivery Checklist
+
+Run before every output:
+
+- [ ] Color palette within 90/8/2 rule?
+- [ ] No pure black `#000` or pure white `#FFF` as base?
+- [ ] Max 2 accent colors, saturation < 80%?
+- [ ] Body font ≥ 38px?
+- [ ] Font size ratio ≥ 10:1?
+- [ ] Line-height ≥ 1.6 for body?
+- [ ] No Inter font?
+- [ ] No forbidden phrases (Chinese + English)?
+- [ ] No 3+ parallel sentences?
+- [ ] No fake data (99.99%, John Doe, Acme)?
+- [ ] Every page has at least one visual highlight?
+- [ ] No centered Hero (when DESIGN_VARIANCE > 4)?
+- [ ] No three-column equal-width cards?
+- [ ] Tone consistent throughout (one tone per piece)?
+- [ ] Shadows tinted, not gray?
+- [ ] No gradient text on headings?
+- [ ] Spacing mathematically precise, no awkward gaps?
+
+---
+
+*Merged source: content-card/references/taste.md + astra-xhs/references/taste-xhs.md*
