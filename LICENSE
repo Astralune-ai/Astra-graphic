@@ -1,6 +1,6 @@
-Asyre Source Available License v1.0
+Astralune Source Available License v1.0
 
-Copyright (c) 2026 Qihe-agent (Emergence Studio)
+Copyright (c) 2026 Astralune (astralune.ai)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to use,
@@ -14,7 +14,7 @@ purposes, subject to the following conditions:
    - Evaluation and testing
 
 2. RESTRICTIONS
-   - Commercial use requires a separate commercial license from Qihe-agent
+   - Commercial use requires a separate commercial license from Astralune
    - You may NOT sell, sublicense, or redistribute the Software as a
      commercial product or service
    - You may NOT use the Software to provide a competing commercial service
@@ -23,7 +23,7 @@ purposes, subject to the following conditions:
 3. ATTRIBUTION
    - You must retain this license notice in all copies or substantial
      portions of the Software
-   - You must clearly attribute the original work to Qihe-agent
+   - You must clearly attribute the original work to Astralune
 
 4. NO WARRANTY
    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -34,4 +34,5 @@ purposes, subject to the following conditions:
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
 
-For commercial licensing inquiries, contact: github.com/Qihe-agent
+For commercial licensing inquiries, contact: asher@astralune.ai
+or github.com/Astralune-ai
